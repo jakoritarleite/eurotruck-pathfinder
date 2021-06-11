@@ -5,7 +5,7 @@ def find_files(path):
     files: list = []
 
     print(f"Looking up in the [{path}] path")
-    for actual_path, directories, files_found in os.walk(path):
+    for actual_path, _, files_found in os.walk(path):
         for arq in files_found:
             files.append(os.path.join(actual_path, arq))
 
