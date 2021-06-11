@@ -41,12 +41,15 @@ def format_text_line(line):
     return line
 
 def format_bin_line(line):
-	formatted_line = ''.join([str(char) for char in line if char in string.printable])
+    formatted_line = ''.join([str(char) for char in line if char in string.printable])
 
-	if not formatted_line[0] in ['/', '\\']:
-		for i in range(len(formatted_line) - 1):
-			if formatted_line[i] in ['/', '\\']:
-				return formatted_line[i:]
+    if not formatted_line[0] in ['/', '\\']:
+        for i in range(len(formatted_line) - 1):
+            if formatted_line[i] in ['/', '\\']:
+                formatted_line = formatted_line[i:]
+                break
+
+    return formatted_line if formatted_line else line
 
 def create_ext_variation(path):
     _, ext = os.path.splitext(path)
