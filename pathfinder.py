@@ -1,8 +1,9 @@
 import os
+import string
 import pathlib
 
 target_extensions = {
-    'inside': ['.tga', '.mat', '.tobj', '.pmd', '.pmc', '.pma', '.sii', '.dds'],
+    'inside': ['.tga', '.mat', '.tobj', '.pmd', '.pmc', '.pma', '.sii', '.dds', '.ogg', '.jpg', '.sui'],
     'lookup': {
         '.sii': 0,
         '.pmd': 0,
@@ -12,6 +13,7 @@ target_extensions = {
 }
 
 found_paths = {
+	'all': [],
     'binary': [],
     'text': []
 }
@@ -20,7 +22,7 @@ def find_files(path):
     files: list = []
 
     print(f"Looking up in the [{path}] path")
-    for actual_path, directories, files_found in os.walk(path):
+    for actual_path, _, files_found in os.walk(path):
         for arq in files_found:
             ext = os.path.splitext(
                 os.path.join(actual_path, arq)
@@ -38,6 +40,14 @@ def format_text_line(line):
 
     return line
 
+def format_bin_line(line):
+	formatted_line = ''.join([str(char) for char in line if char in string.printable])
+
+	if not formatted_line[0] in ['/', '\\']:
+		for i in range(len(formatted_line) - 1):
+			if formatted_line[i] in ['/', '\\']:
+				return formatted_line[i:]
+
 def create_ext_variation(path):
     _, ext = os.path.splitext(path)
 
@@ -48,7 +58,7 @@ def create_ext_variation(path):
             path.replace(ext, '.mat'),
             path.replace(ext, '.tga')
         ]
-    
+
     if ext in ['.pmd', '.pmc', '.pmg', '.pma']:
         return [
             path.replace(ext, '.pmd'),
@@ -66,6 +76,7 @@ def read_sii_mat_file(file_content):
         for extension in target_extensions['inside']:
             if extension in line:
                 found_paths['text'].extend(create_ext_variation(format_text_line(line)))
+                found_paths['all'].extend(create_ext_variation(format_text_line(line)))
 
 def read_tobj_pmd_file(file_content):
     content = file_content.split('\n')
@@ -77,9 +88,10 @@ def read_tobj_pmd_file(file_content):
             .replace('\x03', '')
         for extension in target_extensions['inside']:
             if extension in line:
-                paths_in_line = [ e+'.pmd' for e in line.split(extension) if e ]
+                paths_in_line = [e+extension for e in line.split(extension) if e]
                 for path in paths_in_line:
-                    found_paths['binary'].extend(create_ext_variation(path))
+                    found_paths['binary'].extend(create_ext_variation(format_bin_line(path)))
+                    found_paths['all'].extend(create_ext_variation(format_bin_line(path)))
 
 def read_file(path):
     print(f"Looking up in the {path} file")
@@ -92,13 +104,18 @@ def read_file(path):
             read_tobj_pmd_file(file_content)
 
 def save_in_file(filename, paths):
-    with open(filename, 'w') as infile:
-        infile.write('\n'.join(list(dict.fromkeys(paths))))
+    try:
+        with open(filename, 'w') as infile:
+            infile.write('\n'.join(list(dict.fromkeys(paths))))
+    except FileNotFoundError:
+        os.mkdir('pathfinder_output')
+        save_in_file(filename, paths)
 
 files = find_files(pathlib.Path().absolute())
 
 for file in files:
     read_file(file)
 
-save_in_file('text.files', found_paths['text'])
-save_in_file('binary.files', found_paths['binary'])
+save_in_file('pathfinder_output/text.files', found_paths['text'])
+save_in_file('pathfinder_output/binary.files', found_paths['binary'])
+save_in_file('list.txt', found_paths['all'])
