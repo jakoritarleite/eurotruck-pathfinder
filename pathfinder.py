@@ -3,17 +3,18 @@ import string
 import pathlib
 
 target_extensions = {
-    'inside': ['.tga', '.mat', '.tobj', '.pmd', '.pmc', '.pma', '.sii', '.dds', '.ogg', '.jpg', '.sui'],
+    'inside': ['.tga', '.mat', '.tobj', '.pmd', '.pmc', '.pma', '.sii', '.dds', '.ogg', '.jpg', '.sui', '.bank', '.bank.guid'],
     'lookup': {
         '.sii': 0,
         '.pmd': 0,
         '.tobj': 0,
-        '.mat': 0
+        '.mat': 0,
+        '.soundref': 0
     }
 }
 
 found_paths = {
-	'all': [],
+    'all': [],
     'binary': [],
     'text': []
 }
@@ -36,6 +37,10 @@ def find_files(path):
 def format_text_line(line):
     for i in range(len(line)):
         if line[i] == '"' and i != len(line) - 1:
+            if '#' in line[i:]:
+                for x in range(len(line[i:])):
+                    if line[i:][x] == '#':
+                        return line[i:][:x].replace('"', '')
             return line[i:].replace('"', '')
 
     return line
@@ -70,9 +75,9 @@ def create_ext_variation(path):
             path.replace(ext, '.pma')
         ]
 
-    return []
+    return [path]
 
-def read_sii_mat_file(file_content):
+def read_sii_mat_soundref_file(file_content):
     content = file_content.split('\n')
 
     for line in content:
@@ -101,8 +106,8 @@ def read_file(path):
 
     with open(path, 'r', encoding='iso-8859-15') as file_content:
         file_content = file_content.read()
-        if '.sii' in path or '.mat' in path:
-            read_sii_mat_file(file_content)
+        if '.sii' in path or '.mat' in path or '.soundref' in path:
+            read_sii_mat_soundref_file(file_content)
         elif '.tobj' in path or '.pmd' in path:
             read_tobj_pmd_file(file_content)
 
