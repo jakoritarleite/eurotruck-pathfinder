@@ -3,13 +3,14 @@ import string
 import pathlib
 
 target_extensions = {
-    'inside': ['.tga', '.mat', '.tobj', '.pmd', '.pmc', '.pma', '.sii', '.dds', '.ogg', '.jpg', '.sui', '.bank', '.bank.guid'],
+    'inside': ['.tga', '.mat', '.tobj', '.pmd', '.pmc', '.pma', '.sii', '.dds', '.ogg', '.jpg', '.sui', '.bank', '.bank.guid', '.mask'],
     'lookup': {
         '.sii': 0,
         '.pmd': 0,
         '.tobj': 0,
         '.mat': 0,
-        '.soundref': 0
+        '.soundref': 0,
+        '.sui': 0
     }
 }
 
@@ -77,6 +78,15 @@ def create_ext_variation(path):
 
     return [path]
 
+def read_sui_file(file_content):
+    content = file_content.split('\n')
+
+    for line in content:
+        for extension in target_extensions['inside']:
+            if extension in line:
+                found_paths['text'].extend(format_text_line(line))
+                found_paths['all'].extend(format_text_line(line))
+
 def read_sii_mat_soundref_file(file_content):
     content = file_content.split('\n')
 
@@ -110,6 +120,8 @@ def read_file(path):
             read_sii_mat_soundref_file(file_content)
         elif '.tobj' in path or '.pmd' in path:
             read_tobj_pmd_file(file_content)
+        elif '.sui' in path:
+            read_sui_file(file_content)
 
 def save_in_file(filename, paths):
     try:
